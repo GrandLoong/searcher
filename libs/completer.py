@@ -2,6 +2,7 @@ import os
 import re
 import _winreg
 from PySide import QtCore, QtGui
+import WebSearchers as web_api
 import config
 
 
@@ -13,6 +14,7 @@ class CustomQCompleter(QtGui.QCompleter):
         self.setModel(QtGui.QDirModel(self))
         self.local_completion_prefix = ''
         self.source_model = None
+        self.setCompletionMode(QtGui.QCompleter.UnfilteredPopupCompletion)
         self.filterProxyModel = QtGui.QSortFilterProxyModel(self)
 
 
@@ -20,7 +22,8 @@ class CustomQCompleter(QtGui.QCompleter):
         pattern = QtCore.QRegExp(self.local_completion_prefix, QtCore.Qt.CaseInsensitive, QtCore.QRegExp.FixedString)
         self.filterProxyModel.setFilterRegExp(pattern)
 
-
+    # def pathFromIndex(self,index):
+    #     text = self.wight().text()
 
     # def setModel(self):
 
@@ -42,7 +45,7 @@ class CustomQCompleter(QtGui.QCompleter):
         if os.path.isdir(data):
             self.setModel(QtGui.QDirModel(self))
         else:
-            self.setModel(self.modelFromFile(config.normpath(config.APP_DIR, 'resources/list.txt')))
+            self.setModel(self.modelFromFile())
 
     @staticmethod
     def get_local_completer():
@@ -69,7 +72,6 @@ class CustomQCompleter(QtGui.QCompleter):
     @staticmethod
     def get_gloacl_completer():
         completer_file = config.normpath(config.APP_DIR, 'resources/list.txt')
-        words = []
         c = []
         dics = {}
         with open(completer_file, 'r') as f:
@@ -91,14 +93,14 @@ class CustomQCompleter(QtGui.QCompleter):
             i = 0
 
             while 1:
-                name, value, type = _winreg.EnumValue(key, i)
+                name, value, type_ = _winreg.EnumValue(key, i)
                 completers.append(value.strip('\\1'))
                 i += 1
         except WindowsError:
             pass
         return completers
             #
-    def modelFromFile(self,fileName):
+    def modelFromFile(self):
         # f = QtCore.QFile(fileName)
         # if not f.open(QtCore.QFile.ReadOnly):
         #     return QtGui.QStringListModel(self.completer)
@@ -113,6 +115,7 @@ class CustomQCompleter(QtGui.QCompleter):
         global_data = self.get_gloacl_completer()
         local_data = self.get_local_completer()
         run_data = self.get_runmru_completer()
+        global_data.extend(web_api.dicts.keys())
         if run_data:
             global_data.extend(run_data)
         if local_data:

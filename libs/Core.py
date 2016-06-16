@@ -12,16 +12,17 @@ from completer import CustomQCompleter
 
 class Searchers:
     def __init__(self):
-        self.urlfinder = re.compile(r'http([^\.\s]+\.[^\.\s]*)+[^\.\s]{2,}|www(.+)|(.+).(\w+)')
         self.completer = CustomQCompleter()
 
     def linkify(self, text):
-        def replacewithlink(matchobj):
-            url = matchobj.group(0)
+        urlfinder = re.compile(r'http([^\.\s]+\.[^\.\s]*)+[^\.\s]{2,}|www(.+)|(\w+)^.[a-zA-Z]')
+        m = urlfinder.match(text)
+        if m:
+            print m.group()
+            url = m.group()
+            webbrowser.open_new_tab(url.encode('gb2312'))
 
-        return self.urlfinder.sub(replacewithlink, text)
-
-    def run(self, data):
+    def run(self,data):
         math_ = re.match('(?P<key>\w+|>) (?P<cmd>.+)', data)
         if math_:
             math_key = math_.groupdict()['key']
@@ -54,4 +55,4 @@ class Searchers:
         elif os.path.isfile(data):
             os.startfile(data)
 
-        # webbrowser.open_new_tab(self.linkify(data))
+        self.linkify(data)
