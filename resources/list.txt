@@ -1,0 +1,2 @@
+\\work\app_config\release
+C:\Program Files
