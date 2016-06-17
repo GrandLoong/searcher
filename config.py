@@ -14,14 +14,16 @@ def normpath(*args):
 
 
 def get_regexp(key):
-    with open(normpath(APP_DIR, 'config/regular.yaml'), 'r') as f:
-        data = yaml.load(f)
-    config_vars = key.split("/")
-    value = data
-    for var in config_vars:
-        value = value[var]
-    return value
-
+    try:
+        with open(normpath(APP_DIR, 'config/site.yaml'), 'r') as f:
+            data = yaml.load(f)
+        config_vars = key.split("/")
+        value = data
+        for var in config_vars:
+            value = value[var]
+        return value
+    except:
+        pass
 
 def get_local_profile_dir():
     profile = "USERPROFILE"

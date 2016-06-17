@@ -1,0 +1,41 @@
+command_key:
+    web: "(?P<key>[a-zA-Z0-9_]+) (?P<url>.+)"
+
+help:
+  maya:
+  maxscript: http://docs.autodesk.com/3DSMAX/16/ENU/MAXScript-Help/
+  nuke_python: https://www.thefoundry.co.uk/products/nuke/developers/100/pythonreference/
+  houdini:
+  nuke: https://www.thefoundry.co.uk/products/nuke/developers/100/pythonreference/
+
+web_search:
+  g:
+    name: Google
+    url: https://www.google.com/search?q={q}
+  bd:
+    name: Baidu
+    url: https://www.baidu.com/#ie=UTF-8&wd={q}
+  wiki:
+    name: Wiki
+    url: https://en.wikipedia.org/wiki/{q}
+  github:
+    name: GitHub
+    url: https://github.com/search?q={q}
+  vimeo:
+    name: Vimeo
+    url: https://vimeo.com/search?q={q}',
+  fy_en:
+    name: 翻译英语
+    url: http://translate.google.cn/#en/zh-CN/{q}
+  fy_cn:
+    name: 翻译中文
+    url: http://translate.google.cn/#zh-CN/en/{q}
+  sg:
+    name: Shotgun
+    url: http://translate.google.cn/#zh-CN/en/{q}
+  hb:
+   name: 花瓣图片网
+    url: http://huaban.com/search/?q={q}
+  h_pyside:
+    name: PySide
+    url: https://srinikom.github.io/pyside-docs/search.html?q={q}

@@ -71,11 +71,21 @@ class CustomQCompleter(QtGui.QCompleter):
         self.setWrapAround(False)
 
     def chage_completer(self, data):
+        math_ = re.match('(?P<key>\w+|>) (?P<cmd>.+)', data)
         if re.match('(\w):.+', data):
             # self.dirModel.setRootPath(data)
             self.setModel(QtGui.QDirModel(self))
         elif re.match(r'(>.+)', data):
             self.setModel(QtGui.QStringListModel(self.get_cmd_completer(), self))
+        elif math_:
+            math_key = math_.groupdict()['key']
+            print 'web_search/{0}'.format(math_key)
+            item = config.get_regexp('web_search/{0}'.format(math_key))
+            print item
+            try:
+                self.setModel(QtGui.QStringListModel(['Search in {0}'.format(item['name'])]))
+            except:
+                pass
         else:
             self.setModel(self.modelFromFile())
 
@@ -101,6 +111,10 @@ class CustomQCompleter(QtGui.QCompleter):
         completer_file = config.normpath(local_dir, 'completer.txt')
         with open(completer_file, 'a') as f:
             f.write(text + '\n')
+
+    def get_web_search_key(self):
+        return config.get_regexp('web_search')
+
 
     @staticmethod
     def get_gloacl_completer():
