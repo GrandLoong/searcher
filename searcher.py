@@ -30,6 +30,7 @@ class SearcherGui(ui_form, ui_base):
         self.trayIcon = SearcherSystemTrayIcon(self)
         self.trayIcon.show()
 
+
     def change_completer(self):
         text = self.search_comboBox.text()
         self.completer.chage_completer(text)
@@ -38,7 +39,7 @@ class SearcherGui(ui_form, ui_base):
         # if self.completer.currentCompletion():
         #     self.search_comboBox.setText(self.completer.currentCompletion())
         text = self.search_comboBox.text()
-        print self.completer.completionRole()
+        # print self.completer.completionRole()
         # print self.completer.completionPrefix()
         # print self.completer.currentCompletion()
         # self.completer.save_completer(text)

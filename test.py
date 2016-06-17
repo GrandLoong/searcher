@@ -1,47 +1,85 @@
+from PyQt4.QtCore import *
+from PyQt4.QtGui import *
+
+from PyQt4 import QtGui,QtCore
+
 import sys
-import time
-from ctypes import *
-from ctypes.wintypes import *
 
-from PySide.QtGui import QApplication
-
-# import widget
-from searcher import SearcherGui
-
-delta = 0.3
-lastTime = 0
-
-WM_HOTKEY = 0x0312
-MOD_ALT = 0x0001
-MOD_CONTROL = 0x0002
-MOD_SHIFT = 0x0004
-WM_KEYUP = 0x0101
+import signal
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 
-class MSG(Structure):
-    _fields_ = [('hwnd', c_int), ('message', c_uint), ('wParam', c_int), ('lParam', c_int), ('time', c_int),
-                ('pt', POINT)]
+class MyGui(QDialog):
+
+    def __init__(self, parent=None):
+
+        super(MyGui,self).__init__(parent)
+
+        model = QtGui.QStringListModel()
+        wordList = ['John Doe','Jane Doe','Albert Einstein', 'Alfred E Newman']
+        model.setStringList(wordList)
+
+        layout = QtGui.QVBoxLayout(self)
+        self.line = QtGui.QLineEdit(self)
+        layout.addWidget(self.line)
+
+        self.combobox = QComboBox(parent)
+        layout.addWidget(self.combobox)
+        self.combobox.addItems(wordList)
+        self.combobox.setEditable(True)
+
+        self.setLayout(layout)
+
+        complete = CustomQCompleter2(self)
+        complete.setModel(model)
+        complete.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        complete.setCompletionMode(QCompleter.UnfilteredPopupCompletion)
+        complete.setWrapAround(False)
+
+        self.line.setCompleter(complete)
+        self.combobox.setCompleter(complete)
+        self.combobox.setEditText('')
+
+        self.setGeometry(200, 100, 400, 300)
 
 
-key = 192  # ~ key
-hotkeyId = 1
-if not windll.user32.RegisterHotKey(None, hotkeyId, None, key):
-    sys.exit("Cant Register Hotkey")
+class CustomQCompleter2(QCompleter):
+    def __init__(self, parent=None):
+        super(CustomQCompleter2, self).__init__(parent)
+        self.local_completion_prefix = ""
+        self.source_model = None
 
-msg = MSG()
-app = QApplication(sys.argv)
-w = SearcherGui()
-while True:
-    print msg.message
-    if (windll.user32.GetMessageA(byref(msg), None, 0, 0) != 0):
-        if msg.message == WM_HOTKEY and msg.wParam == hotkeyId:
-            if (time.time() - lastTime) < delta:
-                w.show()
-            else:
-                pass
-            lastTime = time.time()
-        if msg.message == WM_KEYUP:
-            print "up"
-            w.close()
-        windll.user32.TranslateMessage(byref(msg))
-        windll.user32.DispatchMessageA(byref(msg))
+    def setModel(self, model):
+        self.source_model = model
+        super(CustomQCompleter2, self).setModel(self.source_model)
+
+    def updateModel(self):
+        local_completion_prefix = self.local_completion_prefix
+        class InnerProxyModel(QSortFilterProxyModel):
+            def filterAcceptsRow(self, sourceRow, sourceParent):
+                index0 = self.sourceModel().index(sourceRow, 0, sourceParent)
+                searchStr = local_completion_prefix.lower()
+                modelStr = self.sourceModel().data(index0,Qt.DisplayRole).toString().toLower()
+                print searchStr,' in ',modelStr, searchStr in modelStr
+                return searchStr in modelStr
+
+
+        proxy_model = InnerProxyModel()
+
+        proxy_model.setSourceModel(self.source_model)
+
+        super(CustomQCompleter2, self).setModel(proxy_model)
+        print 'match :',proxy_model.rowCount()
+
+
+    def splitPath(self, path):
+        self.local_completion_prefix = str(path)
+        self.updateModel()
+        return ""
+
+if __name__ == '__main__':
+
+    app = QtGui.QApplication(sys.argv)
+    gui = MyGui()
+    gui.show()
+    sys.exit(app.exec_())

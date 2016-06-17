@@ -13,26 +13,57 @@ class CustomQCompleter(QtGui.QCompleter):
         QtGui.QCompleter.__init__(self, *args)
         self.setModel(QtGui.QDirModel(self))
         self.local_completion_prefix = ''
-        self.source_model = None
+        self.global_data = self.get_gloacl_completer()
+        self.local_data = self.get_local_completer()
+        self.run_data = self.get_runmru_completer()
+
         self.setCompletionMode(QtGui.QCompleter.UnfilteredPopupCompletion)
         self.filterProxyModel = QtGui.QSortFilterProxyModel(self)
+        self.set_completer()
+        self.source_model = None
+        self.build_completer()
 
+    def file_model(self):
+        data = self.widget().text()
+        self.dirModel = QtGui.QFileSystemModel(self)
+        self.dirModel.setRootPath(data)
+        self.dirModel.setFilter(QtCore.QDir.AllDirs | QtCore.QDir.NoDotAndDotDot | QtCore.QDir.Files)
+        self.dirModel.setNameFilterDisables(0)
+        return self.dirModel
 
     def updateModel(self):
         pattern = QtCore.QRegExp(self.local_completion_prefix, QtCore.Qt.CaseInsensitive, QtCore.QRegExp.FixedString)
         self.filterProxyModel.setFilterRegExp(pattern)
 
-    # def pathFromIndex(self,index):
-    #     text = self.wight().text()
+    # def updateModel(self):
+    #     local_completion_prefix = self.local_completion_prefix
+    #     class InnerProxyModel(QtGui.QSortFilterProxyModel):
+    #         def filterAcceptsRow(self, sourceRow, sourceParent):
+    #             index0 = self.sourceModel().index(sourceRow, 0, sourceParent)
+    #             searchStr = local_completion_prefix.lower()
+    #             modelStr = self.sourceModel().data(index0,QtCore.Qt.DisplayRole)#.toString().toLower()
+    #             print searchStr,' in ',modelStr, searchStr in modelStr
+    #             return searchStr in modelStr
+    #
+    #
+    #     proxy_model = InnerProxyModel()
+    #
+    #     proxy_model.setSourceModel(self.source_model)
+    #
+    #     super(CustomQCompleter, self).setModel(proxy_model)
+    #     print 'match :',proxy_model.rowCount()
 
-    # def setModel(self):
 
+    # def splitPath(self, path):
+    #     print path
+    #     self.chage_completer(path)
+    #     return ""
 
     def set_completer(self):
         # self.setCompletionMode(0)
         self.setCompletionMode(QtGui.QCompleter.UnfilteredPopupCompletion)
+        # self.setModel(self.dirModel)
         # self.setCompletionMode(QtGui.QCompleter.InlineCompletion)
-        self.setModel(QtGui.QDirModel(self))
         # self.setModel(self.modelFromFile(config.normpath(config.APP_DIR, 'resources/list.txt')))
         self.setModelSorting(QtGui.QCompleter.CaseInsensitivelySortedModel)
         self.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
@@ -41,11 +72,15 @@ class CustomQCompleter(QtGui.QCompleter):
 
     def chage_completer(self, data):
         if re.match('(\w):.+', data):
+            # self.dirModel.setRootPath(data)
             self.setModel(QtGui.QDirModel(self))
-        if os.path.isdir(data):
-            self.setModel(QtGui.QDirModel(self))
+        elif re.match(r'(>.+)', data):
+            self.setModel(QtGui.QStringListModel(self.get_cmd_completer(), self))
         else:
             self.setModel(self.modelFromFile())
+
+    def get_cmd_completer(self):
+        return ['> {0}'.format(x).strip('.bat') for x in os.listdir(config.normpath(config.PLUGINS_DIR, 'cmd'))]
 
     @staticmethod
     def get_local_completer():
@@ -60,14 +95,12 @@ class CustomQCompleter(QtGui.QCompleter):
                     words.append(line.strip('\n'))
             return words
 
-
     @staticmethod
     def save_completer(text):
         local_dir = config.get_local_profile_dir()
         completer_file = config.normpath(local_dir, 'completer.txt')
         with open(completer_file, 'a') as f:
             f.write(text + '\n')
-
 
     @staticmethod
     def get_gloacl_completer():
@@ -99,26 +132,26 @@ class CustomQCompleter(QtGui.QCompleter):
         except WindowsError:
             pass
         return completers
-            #
+        #
+
     def modelFromFile(self):
         # f = QtCore.QFile(fileName)
         # if not f.open(QtCore.QFile.ReadOnly):
         #     return QtGui.QStringListModel(self.completer)
 
         QtGui.QApplication.setOverrideCursor(QtGui.QCursor(QtCore.Qt.WaitCursor))
-        data = self.build_completer()
+        data = self.global_data
 
         QtGui.QApplication.restoreOverrideCursor()
         return QtGui.QStringListModel(data, self)
-            #
-    def build_completer(self):
-        global_data = self.get_gloacl_completer()
-        local_data = self.get_local_completer()
-        run_data = self.get_runmru_completer()
-        global_data.extend(web_api.dicts.keys())
-        if run_data:
-            global_data.extend(run_data)
-        if local_data:
-            global_data.extend(local_data)
+        #
 
-        return global_data
+    def build_completer(self):
+
+        self.global_data.extend(web_api.dicts.keys())
+        if self.run_data:
+            self.global_data.extend(self.run_data)
+        if self.local_data:
+            self.global_data.extend(self.local_data)
+
+        return self.global_data

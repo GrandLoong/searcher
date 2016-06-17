@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+from PySide import QtGui,QtCore
 import webbrowser
 import subprocess
 
@@ -31,9 +32,9 @@ class Searchers:
                 command = '{0}'.format(cmd_string)
                 cmd.run(command)
             elif math_key == 'help':
-                webbrowser.open_new_tab(config.get_regylar('help')[cmd_string])
+                webbrowser.open_new_tab(config.get_regexp('help')[cmd_string])
             else:
-                m = re.match(config.get_regylar('web'), data)
+                m = re.match(config.get_regexp('command_key/web'), data)
                 if m:
                     try:
                         url = m.groupdict()['url']

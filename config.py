@@ -9,14 +9,18 @@ PLUGINS_DIR = pathjoin(APP_DIR, 'plugins')
 
 
 def normpath(*args):
+    # type: (object) -> object
     return os.path.normpath(pathjoin(*args))
 
 
-def get_regylar(key):
+def get_regexp(key):
     with open(normpath(APP_DIR, 'config/regular.yaml'), 'r') as f:
         data = yaml.load(f)
-    assert isinstance(key, object)
-    return data[key]
+    config_vars = key.split("/")
+    value = data
+    for var in config_vars:
+        value = value[var]
+    return value
 
 
 def get_local_profile_dir():
